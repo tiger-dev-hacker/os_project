@@ -20,3 +20,10 @@ run the following commands to execute task 1 in terminal
 
 ./task2
 
+For Task3.c
+g++ server.cpp -o server.exe -lws2_32
+server.exe
+g++ client.cpp -o client.exe -lws2_32
+client.exe
+
+
