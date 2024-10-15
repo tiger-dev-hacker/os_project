@@ -12,6 +12,7 @@ sem_t sem_customer;
 pthread_mutex_t mutex;
 pthread_cond_t cond;
 int waiting_customer = 0;
+int customer_left = 0; // Counter for customers who have left
 
 void* customer(void* num) {
     int id = *((int*)num);
@@ -42,6 +43,10 @@ void* customer(void* num) {
 
     pthread_mutex_lock(&mutex);
     waiting_customer--;
+    customer_left++; // Increment the customer left counter
+    if (customer_left == 4) {
+        pthread_cond_signal(&cond); // Signal the barber to go to sleep
+    }
     pthread_mutex_unlock(&mutex);
 
     free(num); // Free the dynamically allocated memory for the customer ID
@@ -49,11 +54,15 @@ void* customer(void* num) {
 }
 
 void* barber() {
-    int customers_served = 0; // Counter for served customers
     while (1) {
         sem_wait(&sem_customer); // Wait for a customer to arrive
 
         pthread_mutex_lock(&mutex);
+        if (customer_left == 4) {
+            printf("Barber goes to sleep\n");
+            pthread_cond_wait(&cond, &mutex);
+        }
+
         int haircut_time = rand() % 5 + 1;
         printf("Barber starts cutting hair for %d seconds\n", haircut_time);
         pthread_mutex_unlock(&mutex);
@@ -62,11 +71,6 @@ void* barber() {
         sem_post(&sem_barber); // Signal that the haircut is done
 
         pthread_mutex_lock(&mutex);
-        customers_served++;
-        if (customers_served == 4) {
-            printf("Barber goes to sleep\n");
-            pthread_cond_wait(&cond, &mutex);
-        }
         pthread_mutex_unlock(&mutex);
     }
     return NULL;
@@ -91,7 +95,7 @@ int main() {
     // Wait for 1 second before creating customers 2, 3, and 4
     sleep(1);
 
-    // Create customers 2, 3, and 4
+ // Create customers 2, 3, and 4
     for (int i = 1; i <= 3; i++) {
         int* id = malloc(sizeof(int));
         *id = i + 1;
