@@ -69,8 +69,10 @@ void* philosopher(void* index) {
 int main() {
    
 
+printf("Please enter number of philosophers:");
+scanf("%d", &num_philosophers);
 
-
+chopsticks = malloc(sizeof(pthread_mutex_t )* num_philosophers);
 pthread_t threads[num_philosophers];
 int philosopher_ids[num_philosophers];
 
@@ -91,7 +93,7 @@ for(int i = 0; i < num_philosophers; i++) {
 }
 
 
-
+free(chopsticks);
 
 return 0;
 }
